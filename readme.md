@@ -7,10 +7,10 @@ Um mich in dieser Lernperiode genügend zu **fordern**, und auch viel neues übe
 
 ## 25.10.2024
 
-- [ ] Pac-Man design und Animation entwerfen
-- [ ] Experimentieren, wie man den Pac-Man in der Konsole steuern kann
+- [x] Pac-Man design und Animation entwerfen
+- [x] Experimentieren, wie man den Pac-Man in der Konsole steuern kann
 
-
+Heute habe ich es geschafft, die Steuerung vom PacMan zu Programmieren. Obwohl ich anfänglich Schwierigkeiten hatte, klappte dies, nachdem ich im Internet herausgefunden hatte, wie man einlesen kann welche Taste gedrückt wird, relativ gut. Jedoch sieht es im Moment noch ein Wenig abgehackt aus. Für den PacMan und seine verschiedenen Phasen, habe ich die Zeichen □, ⊏, ⊐, ⊓ und ⊔ verwendet. Da es sich dabei jedoch um Mathematische Zeichen handelt, wurden diese zuerst als "?" angezeigt. Um diesen Fehler zu beheben musste ich deshalb `Console.OutputEncoding = System.Text.Encoding.UTF8;` anwenden.
 
 ## 1.11.2024
 
