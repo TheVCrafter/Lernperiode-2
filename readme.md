@@ -25,7 +25,8 @@ Dazu ich erstellte ich zunächst eine Funktion namens isThereAWall. Dann spaltet
 
 ## 8.11.2024
 
--[ ] Anzeigen wie viele Punkte gesammelt wurden
--[ ] Einen Geist hinzufügen und dafür einen Pathfinding-Mechanismus entwickeln
--[ ] 
+- [ ] Anzeigen wie viele Punkte gesammelt wurden
+- [ ] Geist hinzufügen und dafür einen Pathfinding-Mechanismus entwickeln
+- [ ] 3 Leben für den Pac-Man und Tod bei berührung mit dem Geist
+- [ ] Der Pac-Man soll beim Fressen der auch im originalen Spiel enthaltenen Kraftpille die Geister fressen können und dafür Punkte erhalten
 
