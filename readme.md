@@ -14,12 +14,18 @@ Heute habe ich es geschafft, die Steuerung vom PacMan zu Programmieren. Obwohl i
 
 ## 1.11.2024
 
-- [ ] Herausfinden, wie der Pac-Man die Punkte aufsammeln kann
-- [ ] Score und Highscore anzeigen und den Highscore speichern
-- [ ] Die Geister dazu bringen, den Spieler zu verfolgen und zu töten
-- [ ] Die Leben des Spielers auf 3 setzen und beim Tod um ein Leben runtersetzen
+- [X] Map designen
+- [X] Verhindern, dass der Pac-Man die Map verlassen kann
+- [X] Punkte, welche vom Pac-Man eingesammelt werden können einfügen
+- [X] Herausfinden, wie der Pac-Man die Punkte aufsammeln kann
 
+Zu Beginn designte ich heute eine Map für das Spiel. Dazu erstellte ich im Text-Editor mit verschiedenen Strich-Arten ein Ascii-Art und fügte dieses anschliessend als String in mein Programm ein.
+Anschliessend hatte ich jedoch das Problem, das der Pac-Man nicht in der Map blieb, sondern durch die Wand lief und dabei die Map zerstörte. Ich musste also einen Weg finden, dies zu verhindern. 
+Dazu ich erstellte ich zunächst eine Funktion namens isThereAWall. Dann spaltete ich den Map-String mithilfe von `.split(\'n')` in seine einzelnen Zeile und speicherte die auf eine Wand zu prüfende Zeile in einem Char-Array. Anschliessend prüfte ich, ob die einzelnen Zeichen in der betroffenen Zeile ein Teil der Map sind. Zunächst funktionierte es nicht und der Pac-Man bewegte sich gar nicht mehr und ich wusste auch nicht genau woran dies liegen könnte. Doch ich entdeckte bald, dass dies daran lag, dass ich beim Designen der Map nicht nur Leerschläge, sondern auch Tabs verwendet hatte. Ich bearbeitete die Map also nochmals und ersetzte alle Tabs. Danach funktionierte das ganze zum Glück und ich wollte Punkte in das Spiel einfügen. Ich musste die Map also erneut bearbeiten, und einfach an bestimmten stellen · oder • einfügen. Das aufsammeln der Punkte stellte glücklicherweise kein Problem dar, da die Punkte eh durch einen Leerschlag ersetzt werden, wenn der Pac-Man darüber läuft.
 
+## 8.11.2024
 
-## ...
+-[ ] Anzeigen wie viele Punkte gesammelt wurden
+-[ ] Einen Geist hinzufügen und dafür einen Pathfinding-Mechanismus entwickeln
+-[ ] 
 
