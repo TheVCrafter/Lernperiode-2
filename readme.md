@@ -26,7 +26,16 @@ Dazu ich erstellte ich zunächst eine Funktion namens isThereAWall. Dann spaltet
 ## 8.11.2024
 
 - [ ] Anzeigen wie viele Punkte gesammelt wurden
-- [ ] Geist hinzufügen und dafür einen Pathfinding-Mechanismus entwickeln
+- [x] Geist hinzufügen und dafür einen Pathfinding-Mechanismus entwickeln
 - [ ] 3 Leben für den Pac-Man und Tod bei berührung mit dem Geist
 - [ ] Der Pac-Man soll beim Fressen der auch im originalen Spiel enthaltenen Kraftpille die Geister fressen können und dafür Punkte erhalten
+
+Heute habe ich vorallem an dem Pathfinding des Geistes gearbeitet. Dazu musste ich sicherstellen, das der Geist sich automatisch durch die Map bewegt und wie der PacMan keine Wände der Map zerstört. Ausserdem musste ich schauen, dass die Punkte nicht durch den Geist sondern nur vom PacMan aufgefressen werden können. Dies funktionierte auch zu beginn. Als ich jedoch am Pathfinding des Geistes weiter arbeitete, funktionierte dies nicht mehr wie gewollt und die Punkte verschwanden wenn der Geist einmal darüber lief und tauchten wieder auf wenn er ein zweites Mal darüber lief. Ausserdem hatte ich über lange Zeit das Problem, dass der Geist plötzlich einfach stecken blieb. Dies konnte ich nur teilweise beheben. Grundsätzlich funktioniert mein Pathfinding, der Geist folgt jedoch noch nicht dem PacMan und wie schon erwähnt treten einige Bugs auf. Deshalb werde ich mir auf nächstes Mal Primär vornehmen mein Programm zu debuggen und den Pathfinding-Mechanismus zu beenden.
+
+## 15.11.2024
+
+- [ ] Pathfinding des Geistes debuggen und abschliessen
+- [ ] Tod des PacMan bei Berührung mit dem Geist und anschliessend hinzufügen das der PacMan 2 mal wiederbelebt wird und das Spiel bei einem 3. Tod beendet wird (3 Leben)
+- [ ] GUI des Spiels verbessern (Hauptmenü, Punkteanzahl, Lebensanzeige, Endmenü bei Sieg und Endmenü bei Niederlage, Pausenmenü etc.)
+- [ ] Zusatzfunktionen wie Kraftpille und Bonus-Früchte hinzufügen
 
