@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Data;
 using System.Linq;
 using System.Reflection;
@@ -12,6 +13,8 @@ namespace PacMan
 {
     internal class Program
     {
+        static int ghostx = 45;
+        static int ghosty = 1;
         static void Main(string[] args)
         {
             Console.CursorVisible = false;
@@ -24,11 +27,9 @@ namespace PacMan
             char PacmanMouthClosed = Convert.ToChar(Pacman[0]);
             char PacmanMouthOpen = ' ';
             Console.WriteLine(Map);
-            Console.SetCursorPosition(15, 15);
-            string[] Wall = { "¦", "-", "¯" };
             while (true)
             {
-                Console.OutputEncoding = System.Text.Encoding.UTF8;
+                Console.OutputEncoding = Encoding.UTF8;
                 if (Console.KeyAvailable)
                 {
                     ConsoleKeyInfo keyInfo = Console.ReadKey(intercept: false);
@@ -80,6 +81,7 @@ namespace PacMan
                 {
                     Console.Write(PacmanMouthOpen);
                 }
+                Ghosts(Counter, previousX, previousY);
                 Thread.Sleep(300);
             }
         }
@@ -113,9 +115,9 @@ static string Map = @" ---------------------------------------------------------
         {
             bool TouchingWall = false;
             string[] splitedmap = Map.Split('\n');
-            char[] MapSymbols = { '¦','\'','-','¯'};
+            char[] MapSymbols = { '¦', '\'', '-', '¯' };
             char[] CurrentLine = splitedmap[currentY].ToCharArray();
-            for (int i = 0; i < MapSymbols.Length; i++) 
+            for (int i = 0; i < MapSymbols.Length; i++)
             {
                 if (CurrentLine[currentX] == MapSymbols[i])
                 {
@@ -124,6 +126,91 @@ static string Map = @" ---------------------------------------------------------
             }
             return TouchingWall;
 
+        }
+        static int previousdirection = 0;
+        static void Ghosts(int Counter, int pacmanx, int pacmany)
+        {
+            int previousX = ghostx;
+            int previousY = ghosty;
+            Random random = new Random();
+            Console.OutputEncoding = Encoding.UTF8;
+            string Ghost = "👻";
+
+            if (Counter == 1)
+            {
+                ghostx = 45;
+                ghosty = 1;
+                Console.SetCursorPosition(ghostx, ghosty);
+                Console.Write(Ghost);
+            }
+            bool xposwall = isThereAWall(ghostx + 2, ghosty);
+            bool yposwall = isThereAWall(ghostx, ghosty + 1);
+            bool xnegwall = isThereAWall(ghostx - 2, ghosty);
+            bool ynegwall = isThereAWall(ghostx, ghosty - 1);
+            bool bewegt = false;
+            if (Counter == 1)
+            {
+                int randomDirection = random.Next(2);
+                if (randomDirection == 0)
+                {
+                    randomDirection = -1;
+                }
+                ghostx += randomDirection;
+            }
+            else
+            {
+                switch (previousdirection)
+                {
+                    case 1: if (!xposwall && !bewegt) { if (!isThereAWall(ghostx, ghosty - 1) && Counter % 2 == 0) ghosty -= 1; else if (!isThereAWall(ghostx, ghosty + 1) && Counter % 2 == 0) ghosty += 1; else if (!isThereAWall(ghostx + 2, ghosty) && Counter % 2 == 0) ghostx += 1; bewegt = true; } break;
+                    case 2: if (!yposwall && !bewegt) { if (!isThereAWall(ghostx - 2, ghosty) && Counter % 2 == 0) ghostx -= 1; else if (!isThereAWall(ghostx + 2, ghosty) && Counter % 2 == 0) ghostx += 1; else if (!isThereAWall(ghostx, ghosty + 1) && Counter % 2 == 0) ghosty += 1; bewegt = true; } break;
+                    case 3: if (!xnegwall && !bewegt) { if (!isThereAWall(ghostx, ghosty - 1) && Counter % 2 == 0) ghosty -= 1; else if (!isThereAWall(ghostx, ghosty + 1) && Counter % 2 == 0) ghosty += 1; else if (!isThereAWall(ghostx - 2, ghosty) && Counter % 2 == 0) ghostx -= 1; bewegt = true; } break;
+                    case 4: if (!ynegwall && !bewegt) { if (!isThereAWall(ghostx - 2, ghosty) && Counter % 2 == 0) ghostx -= 1; else if (!isThereAWall(ghostx + 2, ghosty) && Counter % 2 == 0) ghostx += 1; else if (!isThereAWall(ghostx, ghosty - 1) && Counter % 2 == 0) ghosty -= 1; bewegt = true; } break;
+                }
+            }
+            if (!bewegt)
+            {
+                int randomDirection = random.Next(1, 5);
+
+                switch (randomDirection)
+                {
+                    case 1:
+                        if (!xposwall && !isThereAWall(ghostx + 2, ghosty))
+                            ghostx += 1;
+                        break;
+
+                    case 2:
+                        if (!yposwall && !isThereAWall(ghostx, ghosty + 1))
+                            ghosty += 1;
+                        break;
+
+                    case 3:
+                        if (!xnegwall && !isThereAWall(ghostx - 2, ghosty))
+                            ghostx -= 1;
+                        break;
+
+                    case 4:
+                        if (!ynegwall && !isThereAWall(ghostx, ghosty - 1))
+                            ghosty -= 1;
+                        break;
+                }
+            }
+
+            Console.SetCursorPosition(previousX, previousY);
+                Console.Write(previousSymbol(previousX, previousY));
+                Console.SetCursorPosition(ghostx, ghosty);
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Write(Ghost);
+                if (ghostx > previousX) previousdirection = 1;
+                if (ghosty > previousY) previousdirection = 2;
+                if (ghostx < previousX) previousdirection = 3;
+                if (ghosty < previousY) previousdirection = 4;
+        }
+            static char previousSymbol(int x, int y)
+        {
+            string[] splitedmap = Map.Split('\n');
+            char[] CurrentLine = splitedmap[y].ToCharArray();
+            char previouschar = CurrentLine[x];
+            return previouschar;
         }
     }
 }
