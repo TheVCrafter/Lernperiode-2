@@ -13,104 +13,155 @@ namespace PacMan
 {
     internal class Program
     {
-        static int ghostx = 45;
-        static int ghosty = 1;
+        static bool Gamerunning = true;
+        static int ghostx;
+        static int ghosty;
         static void Main(string[] args)
         {
-            Console.CursorVisible = false;
-            int Counter = 0;
-            int previousY = 17;
-            int previousX = 45;
-            int xspeed = 0;
-            int yspeed = 0;
-            Thread.Sleep(50);
-            char PacmanMouthClosed = Convert.ToChar(Pacman[0]);
-            char PacmanMouthOpen = ' ';
-            Console.WriteLine(Map);
-            while (true)
+            while (Gamerunning)
             {
+                Console.CursorVisible = false;
+                int Counter = 0;
+                int previousY = 17;
+                int previousX = 45;
+                int xspeed = 0;
+                int yspeed = 0;
+                int lives = 3;
+                int points = 0;
+                char Symbol;
+                char Point = '·';
+                char PowerPellet = '◯';
+                char PacmanMouthClosed = Convert.ToChar(Pacman[0]);
+                char PacmanMouthOpen = ' ';
+                bool lost = false;
+                bool won = false;
                 Console.OutputEncoding = Encoding.UTF8;
-                if (Console.KeyAvailable)
+                Console.ForegroundColor = ConsoleColor.Blue;
+                Console.WriteLine(Map);
+                while (true)
                 {
-                    ConsoleKeyInfo keyInfo = Console.ReadKey(intercept: false);
-
-                    // Aktion basierend auf der gedrückten Taste
-                    switch (keyInfo.Key)
+                    if (Console.KeyAvailable)
                     {
-                        case ConsoleKey.RightArrow:
-                            PacmanMouthOpen = Convert.ToChar(Pacman[1]);
-                            xspeed = 1;
-                            yspeed = 0;
-                            break;
-                        case ConsoleKey.LeftArrow:
-                            PacmanMouthOpen = Convert.ToChar(Pacman[2]);
-                            xspeed = -1;
-                            yspeed = 0;
-                            break;
-                        case ConsoleKey.UpArrow:
-                            PacmanMouthOpen = Convert.ToChar(Pacman[4]);
-                            xspeed = 0;
-                            yspeed = -1;
-                            break;
-                        case ConsoleKey.DownArrow:
-                            PacmanMouthOpen = Convert.ToChar(Pacman[3]);
-                            xspeed = 0;
-                            yspeed = 1;
-                            break;
+                        ConsoleKeyInfo keyInfo = Console.ReadKey(intercept: true);
+                        switch (keyInfo.Key)
+                        {
+                            case ConsoleKey.RightArrow:
+                                PacmanMouthOpen = Convert.ToChar(Pacman[1]);
+                                xspeed = 1;
+                                yspeed = 0;
+                                break;
+                            case ConsoleKey.LeftArrow:
+                                PacmanMouthOpen = Convert.ToChar(Pacman[2]);
+                                xspeed = -1;
+                                yspeed = 0;
+                                break;
+                            case ConsoleKey.UpArrow:
+                                PacmanMouthOpen = Convert.ToChar(Pacman[4]);
+                                xspeed = 0;
+                                yspeed = -1;
+                                break;
+                            case ConsoleKey.DownArrow:
+                                PacmanMouthOpen = Convert.ToChar(Pacman[3]);
+                                xspeed = 0;
+                                yspeed = 1;
+                                break;
+                        }
+                    }
+                    Console.SetCursorPosition(0, 25);
+                    Console.Write(new string(' ', Console.WindowWidth));
+                    Console.Write("Punkte: " + points + "/135");
+                    Counter++;
+                    if (isThereAWall(previousX + xspeed, previousY + yspeed) == false)
+                    {
+                        Console.SetCursorPosition(previousX, previousY);
+                        Console.Write(' ');
+                        Console.SetCursorPosition(previousX + xspeed, previousY + yspeed);
+                        previousX = previousX + xspeed;
+                        previousY = previousY + yspeed;
+                    }
+                    else
+                    {
+                        Console.SetCursorPosition(previousX, previousY);
+                    }
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    if (Counter % 2 == 0)
+                    {
+                        Console.Write(PacmanMouthClosed);
+                    }
+                    else if (Counter % 2 != 0)
+                    {
+                        Console.Write(PacmanMouthOpen);
+                    }
+                    Ghosts(Counter, previousX, previousY);
+                    Thread.Sleep(150);
+                    Symbol = previousSymbol(previousX, previousY);
+                    if (Symbol == Point)
+                    {
+                        points++;
+                        changeMapSymbols(previousX, previousY);
+                    }
+                    if (Symbol == PowerPellet)
+                    {
+                        changeMapSymbols(previousX, previousY);
+                    }
+                    if (previousX == ghostx && previousY == ghosty)
+                    {
+                        lives -= 1;
+                        Console.SetCursorPosition(previousX, previousY);
+                        Console.Write("⊔");
+                        Thread.Sleep(100);
+                        Console.SetCursorPosition(previousX, previousY);
+                        Console.Write('_');
+                        Thread.Sleep(100);
+                        Console.SetCursorPosition(previousX, previousY);
+                        Console.Write(' ');
+                        Thread.Sleep(500);
+                        previousX = 45;
+                        previousY = 17;
+                        ghostx = 45;
+                        ghosty = 1;
+                    }
+                    if (lives == 0)
+                    {
+                        lost = true;
+                        break;
                     }
                 }
-                Counter++;
-                if (isThereAWall(previousX + xspeed, previousY + yspeed) == false)
+                if (lost)
                 {
-                    Console.SetCursorPosition(previousX, previousY);
-                    Console.Write(' ');
-                    Console.SetCursorPosition(previousX + xspeed, previousY + yspeed);
-                    previousX = previousX + xspeed;
-                    previousY = previousY + yspeed;
+                    Console.Clear();
+                    Console.WriteLine(Lost);
+                    Restart();
                 }
-                else
-                {
-                    Console.SetCursorPosition(previousX, previousY);
-                }
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                if (Counter % 2 == 0)
-                {
-                    Console.Write(PacmanMouthClosed);
-                }
-                else if (Counter % 2 != 0)
-                {
-                    Console.Write(PacmanMouthOpen);
-                }
-                Ghosts(Counter, previousX, previousY);
-                Thread.Sleep(300);
             }
         }
         static string[] Pacman = { "●", "⊏", "⊐", "⊓", "⊔" };
     
 
-static string Map = @" -----------------------------------------------------------------------------------------------
-¦ ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·    ·                                              ¦
-¦   ¦¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¦   ¦¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¦   ¦
-¦   '------------------------------------------'   '----------------------------------------'   ¦
-¦ ·  ·  ·  ·  ·  ·  ·                            ·  ◯  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  · ¦
-¦¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¦   ¦¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¦   ¦¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¦   ¦
-¦                 ¦ · ¦                           ¦   ¦                                     ¦ · ¦
-¦-----------------'   '---------------------------'   ¦    ---------------------------------'   ¦
-¦ ·  ·  ·  ·  ·  ·  ·                                 ¦    ¦ ◯  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  · ¦
-¦   ¦¯¯¯¯¯¯¯¯¯¯¯¯¯¦   ¦¯¯¯¯¯¯¯¯¯¯¯¯¯¯¦   ¦¯¯¯¯¯¯¯¯¯¯¯¯     ¦   ¦¯¯¯¯¯¯¯¯¯¯¯¯¦   ¦¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¦
-¦ · ¦             ¦   '--------------'   ¦   -----------   ¦ · ¦            ¦ · ¦               ¦
-¦   ¦             ¦ ◯   ·  ·  ·  ·  ·  · ¦  ¦           ¦  ¦   ¦            ¦   '---------------¦ 
-¦ · ¦             ¦   ¦¯¯¯¯¯¯¯¯¯¯¯¯¯¯¦   ¦  ¦   ¦¯¯¯¦   ¦  ¦ · ¦            ¦ ·   ·  ·  ·  ·    ¦
-¦   '---¦         ¦ · ¦              ¦ · ¦  ¦   ¦   ¦   ¦  ¦   ¦------------'   ¦¯¯¯¯¯¯¯¯¯¯¯¦ · ¦
-¦ ·   · ¦    -----'   ¦              ¦   ¦  ¦   ¦   ¦   ¦  ¦ ·  ·  ·  ·  ·    · ¦           ¦   ¦
-¦¯¯¯¦   ¦   ¦ ·     · ¦              ¦ · ¦  ¦   ¦   ¦   ¦  ¦   ¦¯¯¯¯¯¯¯¯¯¯¯¯¦   ¦           ¦ · ¦
-¦   ¦ · ¦   ¦   ¦¯¯¯¯¯¦--------------'   '--'   '---'   '--'   '------------'   ¦     ¦-----'   ¦
-¦   ¦   '---'   ¦     ¦                ·  ·  ·  ·  ·  ·  ·   ·   ·  ·  ·  ·   · ¦     ¦   ·   · ¦
-¦   ¦ ·   ·   · ¦     ¦   ¦¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯'     ¦ · ¦¯¯¯¯¯¦
-¦   '¯¯¯¯¯¯¯¦   ¦     ¦   ¦                                                           ¦   ¦     ¦
-¦           ¦   '¯¯¯¯¯'   '-----------------------------------------------------------' · ¦     ¦
-¦           ¦ ·  ·  ·   ·    ·  ·  ·  ·  ◯  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·   ¦     ¦
- ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯";
+static string Map = @"¦---------------------------------------------------------------------------------------¦
+¦ ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·   ·                                          ¦
+¦ ¦¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¦·¦¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¦ ¦
+¦ '-----------------------------------------' '---------------------------------------' ¦
+¦ ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ◯  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·   ·      ¦
+¦¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¦ ¦¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¦ ¦¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¦ ¦¯¯¯¯¯¦
+¦                 ¦·¦                           ¦ ¦                             ¦·¦     ¦
+¦-----------------' '---------------------------' '-----------------------------' ¦     ¦
+¦◯  ·  ·  ·  ·  ·  ·                               ◯  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·¦     ¦
+¦ ¦¯¯¯¯¯¯¯¯¯¯¯¯¯¦ ¦¯¯¯¯¯¯¯¯¯¯¯¯¯¯¦ ¦¯¯¯¯¯¯¯¯¯¯¯¯¯¦ ¦¯¯¯¯¯¯¯¯¯¯¯¯¦ ¦¯¯¯¯¯¯¯¯¯¯¯¯¯¦ ¦     ¦
+¦·¦             ¦ '--------------' ¦  ¦-------¦  ¦·¦            ¦·¦             ¦ ¦     ¦
+¦ ¦             ¦◯  ·  ·  ·  · ·  ·¦  ¦       ¦  ¦ ¦            ¦ '-------------' ¦     ¦
+¦·¦             ¦ ¦¯¯¯¯¯¯¯¯¯¯¯¯¯¯¦ ¦  ¦ ¦¯¯¯¦ ¦  ¦·¦            ¦·  ·  ·  ·  ·    ¦     ¦
+¦ '---¦         ¦·¦              ¦·¦  ¦ ¦   ¦ ¦  ¦ '------------' ¦¯¯¯¯¯¦ ¦¯¯¯¯¯¦ ¦-----¦
+¦ ·  ·¦    -----' ¦              ¦ ¦  ¦ ¦   ¦ ¦  ¦·  ·  ·  ·  · · ¦     ¦ ¦     ¦       ¦
+¦¯¯¯¦ ¦   ¦ ·    ·¦              ¦·¦  ¦ ¦   ¦ ¦  ¦ ¦¯¯¯¯¯¯¯¯¯¯¯¯¦ ¦     ¦ ¦     '¯¯¯¯¯¦·¦
+¦   ¦·¦   ¦ ¦¯¯¯¯¯¦--------------' '--' '---' '--' '------------' '-----' ¦     ¦-----' ¦
+¦   ¦ '---' ¦     ¦               ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·¦     ¦·  ·  ·¦
+¦   ¦·  ·  ·¦     ¦ ¦¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯'     ¦ ¦¯¯¯¯¯¦
+¦   '¯¯¯¯¯¦ ¦     ¦ ¦                                                           ¦·¦     ¦
+¦         ¦ '-----' '-----------------------------------------------------------' ¦     ¦
+¦         ¦ ·  ·  ·  ·  ·  ·  ·  ·  ◯  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·¦     ¦
+¦¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¦";
+        static string readMap = Map;
         static bool isThereAWall(int currentX, int currentY)
         {
             bool TouchingWall = false;
@@ -134,20 +185,24 @@ static string Map = @" ---------------------------------------------------------
             int previousY = ghosty;
             Random random = new Random();
             Console.OutputEncoding = Encoding.UTF8;
-            string Ghost = "👻";
+            string Ghost = "Δ";
 
             if (Counter == 1)
             {
                 ghostx = 45;
-                ghosty = 1;
-                Console.SetCursorPosition(ghostx, ghosty);
-                Console.Write(Ghost);
+                ghosty = 2;
             }
-            bool xposwall = isThereAWall(ghostx + 2, ghosty);
+            bool xposwall = isThereAWall(ghostx + 1, ghosty);
             bool yposwall = isThereAWall(ghostx, ghosty + 1);
-            bool xnegwall = isThereAWall(ghostx - 2, ghosty);
-            bool ynegwall = isThereAWall(ghostx, ghosty - 1);
-            bool bewegt = false;
+
+            bool xnegwall = isThereAWall(ghostx, ghosty);
+            bool ynegwall;
+            try
+            {
+                ynegwall = isThereAWall(ghostx, ghosty - 1);
+            }
+            catch { ynegwall = true; }
+            bool moved = false;
             if (Counter == 1)
             {
                 int randomDirection = random.Next(2);
@@ -159,43 +214,49 @@ static string Map = @" ---------------------------------------------------------
             }
             else
             {
+                int randomint = random.Next(1,3);
                 switch (previousdirection)
                 {
-                    case 1: if (!xposwall && !bewegt) { if (!isThereAWall(ghostx, ghosty - 1) && Counter % 2 == 0) ghosty -= 1; else if (!isThereAWall(ghostx, ghosty + 1) && Counter % 2 == 0) ghosty += 1; else if (!isThereAWall(ghostx + 2, ghosty) && Counter % 2 == 0) ghostx += 1; bewegt = true; } break;
-                    case 2: if (!yposwall && !bewegt) { if (!isThereAWall(ghostx - 2, ghosty) && Counter % 2 == 0) ghostx -= 1; else if (!isThereAWall(ghostx + 2, ghosty) && Counter % 2 == 0) ghostx += 1; else if (!isThereAWall(ghostx, ghosty + 1) && Counter % 2 == 0) ghosty += 1; bewegt = true; } break;
-                    case 3: if (!xnegwall && !bewegt) { if (!isThereAWall(ghostx, ghosty - 1) && Counter % 2 == 0) ghosty -= 1; else if (!isThereAWall(ghostx, ghosty + 1) && Counter % 2 == 0) ghosty += 1; else if (!isThereAWall(ghostx - 2, ghosty) && Counter % 2 == 0) ghostx -= 1; bewegt = true; } break;
-                    case 4: if (!ynegwall && !bewegt) { if (!isThereAWall(ghostx - 2, ghosty) && Counter % 2 == 0) ghostx -= 1; else if (!isThereAWall(ghostx + 2, ghosty) && Counter % 2 == 0) ghostx += 1; else if (!isThereAWall(ghostx, ghosty - 1) && Counter % 2 == 0) ghosty -= 1; bewegt = true; } break;
+                    case 1: if (!xposwall && !moved) { if (!isThereAWall(previousX, previousY - 1) && randomint == 1) { ghosty -= 1; } else if (!isThereAWall(previousX, previousY + 1) && randomint == 2) { ghosty += 1; } else if (!isThereAWall(previousX + 1, previousY)) { ghostx += 1; moved = true; } } break;
+                    case 2: if (!yposwall && !moved) { if (!isThereAWall(previousX -1, previousY) && randomint==1) ghostx -= 1; else if (!isThereAWall(previousX +1,previousY) && randomint == 2) ghostx += 1; else if (!isThereAWall(previousX, previousY + 1)) ghosty += 1; moved = true; } break;
+                    case 3: if (!xnegwall && !moved) { if (!isThereAWall(previousX, previousY - 1) && randomint == 1) ghosty -= 1; else if (!isThereAWall(previousX, previousY + 1) && randomint==2) ghosty += 1; else if (!isThereAWall(previousX -1, previousY)) ghostx -= 1; moved = true; } break;
+                    case 4: if (!ynegwall && !moved) { if (!isThereAWall(previousX -1, previousY) && randomint == 1) ghostx -= 1; else if (!isThereAWall(previousX+1, previousY) && randomint == 2) ghostx += 1; else if (!isThereAWall(previousX, previousY - 1)) ghosty -= 1; moved = true; } break;
                 }
             }
-            if (!bewegt)
+            if (!moved)
             {
                 int randomDirection = random.Next(1, 5);
 
                 switch (randomDirection)
                 {
                     case 1:
-                        if (!xposwall && !isThereAWall(ghostx + 2, ghosty))
-                            ghostx += 1;
+                        if (!xposwall && !isThereAWall(ghostx + 1, ghosty))
+                        {
+                            ghostx = ghostx + 1;
+                        }
                         break;
 
                     case 2:
                         if (!yposwall && !isThereAWall(ghostx, ghosty + 1))
                             ghosty += 1;
+                        else { ghosty = previousY; }
                         break;
 
                     case 3:
-                        if (!xnegwall && !isThereAWall(ghostx - 2, ghosty))
+                        if (!xnegwall && !isThereAWall(ghostx - 1, ghosty))
                             ghostx -= 1;
+                        else { ghostx = previousX; }
                         break;
 
                     case 4:
                         if (!ynegwall && !isThereAWall(ghostx, ghosty - 1))
                             ghosty -= 1;
+                        else { ghosty = previousY; }
                         break;
                 }
             }
-
             Console.SetCursorPosition(previousX, previousY);
+            Console.ForegroundColor = ConsoleColor.Blue;
                 Console.Write(previousSymbol(previousX, previousY));
                 Console.SetCursorPosition(ghostx, ghosty);
                 Console.ForegroundColor = ConsoleColor.Red;
@@ -207,10 +268,106 @@ static string Map = @" ---------------------------------------------------------
         }
             static char previousSymbol(int x, int y)
         {
-            string[] splitedmap = Map.Split('\n');
+            string[] splitedmap = readMap.Split('\n');
             char[] CurrentLine = splitedmap[y].ToCharArray();
             char previouschar = CurrentLine[x];
             return previouschar;
+        }
+            static int Distance(int ghostx, int ghosty, int pacmanx, int pacmany)
+        {
+            int xdistance = 0;
+            return xdistance;
+        }
+        static void changeMapSymbols(int x, int y)
+        {
+            string newMap="";
+            string[] splitedmap = readMap.Split('\n');
+            char[] CurrentLine = splitedmap[y].ToCharArray();
+            CurrentLine[x] = ' ';
+            splitedmap[y] = new string(CurrentLine);
+            for (int i = 0; i < splitedmap.Length; i++)
+            {
+                newMap += splitedmap[i]+ "\n";
+            }
+            readMap=newMap;
+        }
+        static string GameTitel = @"
+██████╗  █████╗  ██████╗    ███╗   ███╗ █████╗ ███╗   ██╗
+██╔══██╗██╔══██╗██╔════╝    ████╗ ████║██╔══██╗████╗  ██║
+██████╔╝███████║██║         ██╔████╔██║███████║██╔██╗ ██║
+██╔═══╝ ██╔══██║██║         ██║╚██╔╝██║██╔══██║██║╚██╗██║
+██║     ██║  ██║╚██████╗    ██║ ╚═╝ ██║██║  ██║██║ ╚████║
+╚═╝     ╚═╝  ╚═╝ ╚═════╝    ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝";
+        static string Lost = @"
+ __   __            _              _        __
+ \ \ / /__  _   _  | |    ___  ___| |_   _ / /
+  \ V / _ \| | | | | |   / _ \/ __| __| (_) | 
+   | | (_) | |_| | | |__| (_) \__ \ |_   _| | 
+   |_|\___/ \__,_| |_____\___/|___/\__| (_) | 
+                                           \_\";
+        static string restarting = @"
+                _             _   _             
+  _ __ ___  ___| |_ __ _ _ __| |_(_)_ __   __ _ 
+ | '__/ _ \/ __| __/ _` | '__| __| | '_ \ / _` |
+ | | |  __/\__ \ || (_| | |  | |_| | | | | (_| |
+ |_|  \___||___/\__\__,_|_|   \__|_|_| |_|\__, |
+                                          |___/ ";
+        static string[] Loading = { @"
+        
+        
+  _____ 
+ |_____|
+        
+        
+", @"
+              
+              
+  _____ _____ 
+ |_____|_____|
+              
+              
+", @"
+                    
+                    
+  _____ _____ _____ 
+ |_____|_____|_____|
+                    
+                    
+", @"
+                          
+                          
+  _____ _____ _____ _____ 
+ |_____|_____|_____|_____|
+                          
+                          
+" };
+        static void Restart()
+        {
+            Console.WriteLine();
+            Console.Write("Do you want to restart the Game? [Y/N]: ");
+            ConsoleKeyInfo input = Console.ReadKey(intercept: true);
+            while (true)
+            {
+                if (input.Key == ConsoleKey.Y)
+                {
+                    Console.Clear();
+                    Console.WriteLine(restarting);
+                    int cursortop = Console.CursorTop;
+                    for (int i = 0; i < Loading.Length; i++)
+                    {
+                        Console.CursorTop = cursortop;
+                        Console.Write(Loading[i]);
+                        Thread.Sleep(200);
+                        Console.Clear();
+                    }
+                    break;
+                }
+                if (input.Key == ConsoleKey.N)
+                {
+                    Gamerunning = false;
+                    break;
+                }
+            }
         }
     }
 }
