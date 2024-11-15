@@ -34,8 +34,16 @@ Heute habe ich vorallem an dem Pathfinding des Geistes gearbeitet. Dazu musste i
 
 ## 15.11.2024
 
-- [ ] Pathfinding des Geistes debuggen und abschliessen
-- [ ] Tod des PacMan bei Berührung mit dem Geist und anschliessend hinzufügen das der PacMan 2 mal wiederbelebt wird und das Spiel bei einem 3. Tod beendet wird (3 Leben)
+- [x] Pathfinding des Geistes debuggen und abschliessen
+- [x] Tod des PacMan bei Berührung mit dem Geist und anschliessend hinzufügen das der PacMan 2 mal wiederbelebt wird und das Spiel bei einem 3. Tod beendet wird (3 Leben)
 - [ ] GUI des Spiels verbessern (Hauptmenü, Punkteanzahl, Lebensanzeige, Endmenü bei Sieg und Endmenü bei Niederlage, Pausenmenü etc.)
 - [ ] Zusatzfunktionen wie Kraftpille und Bonus-Früchte hinzufügen
 
+Heute habe ich es endlich geschafft, dass das Pathfinding des Geistes richtig funktioniert. Ich musste dazu jedoch die Textur des Geistes ändern und ausserdem die Map etwas umdesignen. Dann hatte ich jedoch das Problem, dass die Zeichen der Map nicht aktualisiert wurden, wenn der Pac Man einen Punkt aufsammelte und deshalb der Geist die Punkte wieder platzierte wenn er über die Entsprechende stelle lief. Um dies zu verhindern erstelle ich anschliessend eine Funktion mit dem Namen "changeMapSymbols". Dann Programmierte ich die Leben und den Tod vom PacMan. Ich programmierte, das der Pac Man stirbt, wenn die Positionen vom Geist und dem Pac Man identisch sind. Die Positionen beider Figuren werden anschliessend zurückgesetzt und ein Leben wird abgezogen. Wenn der PacMan keine leben mehr hat geht es ins Endmenü und der Spieler kann entscheiden, ob er eine weitere Runde spielen möchte oder nicht. Als nächste Programmierte ich die Punkteanzeige und versuchte das Spiel etwas schöner zu gestalten. Zum Schluss begann ich dann noch kurz mit dem Programmieren der Kraftpille, wurde aber noch nicht ganz fertig. Beim Testen des Spiels viel mir dann auf, dass der Pac Man nicht immer stirbt wenn er mit dem Geist in Berührung kommt. Ich habe die Vermutung, das dieses Problem auftritt, weil die beiden Figuren wenn sie in entgegengetzte Richtungen unterwegs sind so aneinander vorbeigehen, dass sie nicht gleichzeitig die gleiche Position haben. Ich werde mich also nächstes Mal sicher um dieses Problem kümmern. Auch habe ich noch nicht implementiert, dass der Geist den Pac Man verfolgt, wenn dieser in Sichtweite ist.
+
+## 22.11.2024
+
+- [ ] Pathfinding des Geistes so verändern dass er den Pac Man verfolgt, wenn dieser in Sichtweite ist
+- [ ] Implementation der Kraftpille abschliessen
+- [ ] Fehler bei der "Berührungserkennung" beheben
+- [ ] Weitere Menüs und Anzeigen ins Spiel einfügen 
