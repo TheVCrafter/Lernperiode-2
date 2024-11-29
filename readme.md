@@ -54,3 +54,4 @@ Zu Beginn habe ich mich heute damit befasst, die Verfolgungsmechanik des Geistes
 
 - [ ] Verfolgungsmechanismus des Geistes verbessern
 - [ ] Design der Menüs eventuell anpassen
+- [ ] Sound ins Spiel einfügen
