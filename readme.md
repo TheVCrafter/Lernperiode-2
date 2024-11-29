@@ -43,15 +43,24 @@ Heute habe ich es endlich geschafft, dass das Pathfinding des Geistes richtig fu
 
 ## 22.11.2024
 
-- [ ] Pathfinding des Geistes so verändern dass er den Pac Man verfolgt, wenn dieser in Sichtweite ist
-- [ ] Implementation der Kraftpille abschliessen
-- [ ] Fehler bei der "Berührungserkennung" beheben
-- [ ] Weitere Menüs und Anzeigen ins Spiel einfügen
+- [X] Pathfinding des Geistes so verändern dass er den Pac Man verfolgt, wenn dieser in Sichtweite ist
+- [X] Implementation der Kraftpille abschliessen
+- [X] Fehler bei der "Berührungserkennung" beheben
+- [X] Weitere Menüs und Anzeigen ins Spiel einfügen
 
 Zu Beginn habe ich mich heute damit befasst, die Verfolgungsmechanik des Geistes zu programmieren. Ich brachte den Geist schliesslich dazu, in die Richtung des PacMans zu laufen, wenn dieser sich auf der gleichen Y-Position befand und sich keine Mauer zwischen den beiden Figuren befand. Jedoch funktionierte das Gleiche aus einem mir unbekannten Grund nicht für die gleiche X-Position. Ich versuchte auf verschiedenste Arten den Fehler zu beheben und prüfte unteranderem ob ich eventuell die Richtungen vertauscht hatte. Als dies alles dann aber nichts nützte begann ich mit dem Programmieren der Kraftpille und beschloss, die Verfolgungsmechanik des Geistes in der nächsten Woche zu beenden. Bei der Kraftpille verwendete ich anschliessend einen ähnlichen Code, wie ich ihn schon zum auslesen der gesammelten Punkte verwendet hatte. Anschliessend erstellte ich einen Int um die Wirkungsdauer festzulegen. Ich gab den Int einen Wert von 20 (da ein Tick in meinem Spiel 0.15 Sekunden lang ist beträgt die Wirkungsdauer also 3 Sekunden). Ich werde die Wirkungsdauer aber in Zukunft eventuell noch verlängern. Anschliessend stellte ich sicher, dass bei aktiver Kraftpille nicht der PacMan vom Geist, sondern der Geist vom PacMan gefressen wird und das die Punktezahl erhöht wird. Ich legte für das Töten des Geistes eine Punktezahl von 15 fest. Zum Schluss schaute ich auch, dass der Geist wie im echten Spiel blau wird wenn man eine Kraftpille aufsammelt. Dann versuchte ich noch mein Spiel etwas schöner zu gestalten und erstellte neben dem Bildschirm bei einer Niederlage, welchen ich ja bereits letztes mal erstellt hatte, noch einen Bildschirm bei einem Sieg und ausserdem noch ein Hauptmenü. Das ganze versuchte ich anschliessend noch mit Ascii-Art zu verschönern. Als ich damit fertig war, legte ich die Punktezahl, welche für einen Sieg benötigt wird auf 150 fest. Da in der Map aber nur 135 Punkte vorhanden sind muss man also mindestens einmal den Geist töten um zu gewinnen. Als letztes Programmierte ich noch eine Pausier-Funktion. Es ist nun also möglich das Spiel mit drücken der Escape-Taste zu pausieren und anschliessend wieder fortzusetzen.
 
 ## 29.11.2024
 
 - [ ] Verfolgungsmechanismus des Geistes verbessern
-- [ ] Design der Menüs eventuell anpassen
-- [ ] Sound ins Spiel einfügen
+- [X] Design der Menüs eventuell anpassen
+- [X] Sound ins Spiel einfügen
+
+Heute habe ich als erstes den Bildschirm welcher nach einer Niederlage erscheint und den Bildschirm welcher nach einem Sieg erscheint etwas angepasst indem ich jeweils ein Besseres Ascii-Art eingefügt habe. Anschliessend suchte ich lange nach Sounds, welche ich in das Spiel einbauen könnte. Ich stiess relativ schnell auf den Start-Sound und die Titelmusik des Spiels, hatte jedoch grosse Mühe die weiteren Sounds zu finden. Nachdem ich weiter recherchiert hatte, fand ich dann schliesslich bei einem Reddit-Post einen Link zu einer Website, auf welcher alle Sounds des Spiels als .wav-Datei heruntergeladen werden konnten. Zunächst baute ich die Titelmusik und den Startsound ins Spiel ein. Dabei hatte ich aufgrund meiner in der letzten Lernperiode gesammelten Erfahrung mit der SoundPlayer-Methode glücklicherweise keine Probleme. Anschliessend fügte ich den Sirenen-Sound ein, welcher während dem Spiel abgespielt wird und sorgte mit '.PlayLooping();' dafür, dass dieser Sound nach komplettem Abspielen neu gestartet wird. Als ich jedoch den Sound welcher beim Fressen von Punkten entsteht einfügen wollte, bekam ich ein Problem. Ich stellte fest, dass ich nicht zwei Sounds gleichzeitig abspielen konnte. Ich probierte deshalb verschiedene Threads für die Sounds zu erstellen, damit diese gleichzeitig ausgeführt werden konnten, hatte jedoch aufgrund mangelnder Erfahrung grosse Probleme und schaffte es leider weiterhin nicht, zwei Sounds gleichzeitig abzuspielen. Ich überlegte ein wenig, ob ich eventuell ingame nur den Sirenen-Sound laufen lassen sollte, da ich mein PacMan-Spiel jedoch möglich realistisch machen will, entschied ich mich dagegen. Damit es mir aber nächste Woche möglich sein wird, zwei Sounds gleichzeitig abzuspielen, habe ich mir vorgenommen, bis nächsten Freitag weiter im Internet zu recherchieren und mich falls nötig mit Multithreading auseinandersetzen.
+
+## 6.11.2024
+
+- [ ] Soundproblem beheben (evtl. mit Multithreading)
+- [ ] Restliche Sounds ins Spiel einfügen
+- [ ] Verfolgungsmechanismus des Geistes verändern, damit er vollständig funktioniert
+- [ ] Code mithilfe von Funktionen übersichtlicher gestalten
