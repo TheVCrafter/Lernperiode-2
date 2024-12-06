@@ -11,46 +11,76 @@ using System.Xml.Schema;
 using System.Media;
 using System.Collections;
 using System.Security.Policy;
+using System.Net.Http.Headers;
+using System.IO;
 
 namespace PacMan
 {
     internal class Program
     {
         static bool Gamerunning = true;
+        static bool gamestarted = false;
         static int ghostx;
         static int ghosty;
-        static int points = 0;
-        static bool PowerPelletactive;
         static ConsoleColor GhostColor = ConsoleColor.Yellow;
+        static string[] Pacman = { "●", "⊏", "⊐", "⊓", "⊔" };
+        static string PacManSubstitutesDisplay = "⊏";
+        static int points;
+        static bool PowerPelletactive;
+        static int Counter;
+        static int pacmanY;
+        static int pacmanX;
+        static int xspeed;
+        static int yspeed;
+        static int lives;
+        static char Symbol;
+        static char Point = '·';
+        static char PowerPellet = '◯';
+        static char PacmanMouthClosed = Convert.ToChar(Pacman[0]);
+        static char PacmanMouthOpen = ' ';
+        static bool lost = false;
+        static bool won = false;
+        static bool Gamepaused = false;
+        static int PelletDuration = 0;
+        static int Sirenstage = 0;
         static SoundPlayer GameMusic = new SoundPlayer("intermission.wav");
+        static SoundPlayer GameStart = new SoundPlayer("start.wav");
+        static string[] Sirensounds = { "siren0_firstloop.wav", "siren1_firstloop.wav", "siren2_firstloop.wav", "siren3_firstloop.wav", "siren4_firstloop.wav" };
+        static SoundPlayer[] Siren = new SoundPlayer[Sirensounds.Length];
+        static SoundPlayer Fright = new SoundPlayer("fright_firstloop.wav");
+        static string[] Deathsounds = { "death_0.wav", "death_1.wav" };
+        static SoundPlayer[] Death = new SoundPlayer[Deathsounds.Length];
+        static int Deathsoundindex = 0;
+        static string GameTitel = File.ReadAllText("GameTitel.txt");
+        static string TitelscreenImage = File.ReadAllText("TitelscreenImage.txt");
+        static string Lost = File.ReadAllText("Lost.txt");
+        static string GhostforLostscreen = File.ReadAllText("GhostForLostScreen.txt");
+        static string Won = File.ReadAllText("Won.txt");
+        static string PacManforWinscreen = File.ReadAllText("PacManForWinScreen.txt");
+        static string restarting = File.ReadAllText("Restarting.txt");
+        static string[] Loading = (File.ReadAllText("Loading.txt")).Split(',');
+        static int sirenincrease;
+        static string Map = File.ReadAllText("Map.txt");
+        static string readMap;
         static void Main(string[] args)
         {
+            for (int i = 0; Sirensounds.Length > i; i++)
+            {
+                Siren[i] = new SoundPlayer(Sirensounds[i]);
+            }
             GameMusic.PlayLooping();
             while (Gamerunning)
             {
+               Counter = 0;
+                pacmanY = 17;
+                pacmanX = 45;
+                xspeed = 0;
+                yspeed = 0;
+                lives = 3;
+                points = 0;
+                sirenincrease = 30;
                 Console.OutputEncoding = Encoding.UTF8;
                 Console.CursorVisible = false;
-                bool gamestarted=false;
-                int Counter = 0;
-                int previousY = 17;
-                int previousX = 45;
-                int xspeed = 0;
-                int yspeed = 0;
-                int lives = 3;
-                char Symbol;
-                char Point = '·';
-                char PowerPellet = '◯';
-                char PacmanMouthClosed = Convert.ToChar(Pacman[0]);
-                char PacmanMouthOpen = ' ';
-                bool lost = false;
-                bool won = false;
-                bool Gamepaused = false;
-                string PacManSubstitutesDisplay = "⊏";
-                int PelletDuration=0;
-                SoundPlayer GameStart = new SoundPlayer("start.wav");
-                SoundPlayer Ghostsiren = new SoundPlayer("siren0_firstloop.wav");
-                SoundPlayer EatDot = new SoundPlayer("eat_dot_0.wav");
-                Thread ThreadGhostSiren = new Thread(() => Ghostsiren.PlayLooping());
                 ConsoleKeyInfo Key;
                 readMap = Map;
                 Console.ForegroundColor=ConsoleColor.Yellow;
@@ -74,7 +104,8 @@ namespace PacMan
                     {
                         Console.Write(PacManSubstitutesDisplay);
                     }
-                    ThreadGhostSiren.Start();
+                    Siren[Sirenstage]= new SoundPlayer(Sirensounds[Sirenstage]);
+                    Siren[Sirenstage].PlayLooping();
                 }
                 if (Key.Key==ConsoleKey.Escape)
                 {
@@ -87,6 +118,15 @@ namespace PacMan
                             Console.SetCursorPosition(0, 24);
                             Console.Write(new string(' ', Console.WindowWidth));
                         }
+                    if ((Sirenstage < Sirensounds.Length) && (points >= sirenincrease))
+                    {
+                        Sirenstage++;
+                        Siren[Sirenstage].PlayLooping();
+                        if (sirenincrease < 150)
+                        {
+                            sirenincrease += 30;
+                        }
+                    }
                     if (Console.KeyAvailable)
                     {
                         ConsoleKeyInfo keyInfo = Console.ReadKey(intercept: true);
@@ -122,12 +162,21 @@ namespace PacMan
                             Console.CursorLeft = 30;
                             Console.ForegroundColor = ConsoleColor.Red;
                             Console.Write("Game paused press [Esc] to Continue");
-                            while(Gamepaused)
+                            GameMusic.PlayLooping();
+                            while (Gamepaused)
                             {
                                 ConsoleKeyInfo Continue = Console.ReadKey();
                                 if (Continue.Key == ConsoleKey.Escape)
                                 {
                                     Gamepaused = false;
+                                    if (PowerPelletactive == true)
+                                    {
+                                        Fright.PlayLooping();
+                                    }
+                                    else
+                                    {
+                                        Siren[Sirenstage].PlayLooping();
+                                    }
                                 }
                             }
                         }
@@ -137,17 +186,17 @@ namespace PacMan
                     Console.Write("Punkte: " + points);
                     Console.WriteLine();
                     Counter++;
-                    if (isThereAWall(previousX + xspeed, previousY + yspeed) == false)
+                    if (isThereAWall(pacmanX + xspeed, pacmanY + yspeed) == false)
                     {
-                        Console.SetCursorPosition(previousX, previousY);
+                        Console.SetCursorPosition(pacmanX, pacmanY);
                         Console.Write(' ');
-                        Console.SetCursorPosition(previousX + xspeed, previousY + yspeed);
-                        previousX = previousX + xspeed;
-                        previousY = previousY + yspeed;
+                        Console.SetCursorPosition(pacmanX + xspeed, pacmanY + yspeed);
+                        pacmanX = pacmanX + xspeed;
+                        pacmanY = pacmanY + yspeed;
                     }
                     else
                     {
-                        Console.SetCursorPosition(previousX, previousY);
+                        Console.SetCursorPosition(pacmanX, pacmanY);
                     }
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     if (Counter % 2 == 0)
@@ -158,22 +207,20 @@ namespace PacMan
                     {
                         Console.Write(PacmanMouthOpen);
                     }
-                    Ghosts(Counter, previousX, previousY);
+                    Ghosts();
                     Thread.Sleep(150);
-                    Symbol = previousSymbol(previousX, previousY);
+                    Symbol = previousSymbol(pacmanX, pacmanY);
                     if (Symbol == Point)
                     {
-                        Thread ThreadEatDot = new Thread(() => EatDot.Play());
-                        ThreadEatDot.Start();
-                        ThreadEatDot.Join();
                         points++;
-                        changeMapSymbols(previousX, previousY);
+                        changeMapSymbols(pacmanX, pacmanY);
                     }
                     if (Symbol == PowerPellet)
                     {
-                        changeMapSymbols(previousX, previousY);
+                        changeMapSymbols(pacmanX, pacmanY);
                         PowerPelletactive=true;
                         PelletDuration = 20;
+                        Fright.PlayLooping();
                     }
                     if (PowerPelletactive)
                     {
@@ -182,39 +229,15 @@ namespace PacMan
                         if(PelletDuration==0)
                         {
                             PowerPelletactive = false;
+                            Siren[Sirenstage].PlayLooping();
                         }
+
                     }
                     else
                     {
                         GhostColor = ConsoleColor.Red;
                     }
-                    if (((Math.Abs(previousX - ghostx) <= 1 && previousY == ghosty)|| (previousX == ghostx && Math.Abs(previousY - ghosty) <= 1)) && !PowerPelletactive)
-                    {
-                        lives -= 1;
-                        Console.SetCursorPosition(ghostx, ghosty);
-                        Console.Write(' ');
-                        Console.SetCursorPosition(previousX, previousY);
-                        Console.Write("⊔");
-                        Thread.Sleep(100);
-                        Console.SetCursorPosition(previousX, previousY);
-                        Console.Write('_');
-                        Thread.Sleep(100);
-                        Console.SetCursorPosition(previousX, previousY);
-                        Console.Write(' ');
-                        Thread.Sleep(500);
-                        previousX = 45;
-                        previousY = 17;
-                        ghostx = 45;
-                        ghosty = 1;
-                        Console.SetCursorPosition(0, 27);
-                        Console.Write(new string(' ', Console.WindowWidth));
-                        Console.ForegroundColor = ConsoleColor.Yellow;
-                        Console.SetCursorPosition(0, 27);
-                        for (int i = 0; i < lives; i++)
-                        {
-                            Console.Write(PacManSubstitutesDisplay);
-                        }
-                    }
+                    PacManTouchesGhost();
                     if (lives == 0)
                     {
                         lost = true;
@@ -228,6 +251,7 @@ namespace PacMan
                 }
                 if (lost)
                 {
+                    Siren[Sirenstage].Stop();
                     Console.Clear();
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.Write(Lost);
@@ -239,6 +263,7 @@ namespace PacMan
                 }
                 if (won)
                 {
+                    Siren[Sirenstage].Stop();
                     Console.Clear();
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.Write(Won);
@@ -250,33 +275,6 @@ namespace PacMan
                 }
             }
         }
-        static string[] Pacman = { "●", "⊏", "⊐", "⊓", "⊔" };
-
-
-        static string Map = @"¦---------------------------------------------------------------------------------------¦
-¦ ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·   ·                                          ¦
-¦ ¦¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¦·¦¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¦ ¦
-¦ '-----------------------------------------' '---------------------------------------' ¦
-¦ ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ◯  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·   ·      ¦
-¦¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¦ ¦¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¦ ¦¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¦ ¦¯¯¯¯¯¦
-¦                 ¦·¦                           ¦ ¦                             ¦·¦     ¦
-¦-----------------' '---------------------------' '-----------------------------' ¦     ¦
-¦◯  ·  ·  ·  ·  ·  ·                               ◯  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·¦     ¦
-¦ ¦¯¯¯¯¯¯¯¯¯¯¯¯¯¦ ¦¯¯¯¯¯¯¯¯¯¯¯¯¯¯¦ ¦¯¯¯¯¯¯¯¯¯¯¯¯¯¦ ¦¯¯¯¯¯¯¯¯¯¯¯¯¦ ¦¯¯¯¯¯¯¯¯¯¯¯¯¯¦ ¦     ¦
-¦·¦             ¦ '--------------' ¦  ¦-------¦  ¦·¦            ¦·¦             ¦ ¦     ¦
-¦ ¦             ¦◯  ·  ·  ·  · ·  ·¦  ¦       ¦  ¦ ¦            ¦ '-------------' ¦     ¦
-¦·¦             ¦ ¦¯¯¯¯¯¯¯¯¯¯¯¯¯¯¦ ¦  ¦ ¦¯¯¯¦ ¦  ¦·¦            ¦·  ·  ·  ·  ·    ¦     ¦
-¦ '---¦         ¦·¦              ¦·¦  ¦ ¦   ¦ ¦  ¦ '------------' ¦¯¯¯¯¯¦ ¦¯¯¯¯¯¦ '-----¦
-¦ ·  ·¦    -----' ¦              ¦ ¦  ¦ ¦   ¦ ¦  ¦·  ·  ·  ·  · · ¦     ¦ ¦     ¦       ¦
-¦¯¯¯¦ ¦   ¦ ·    ·¦              ¦·¦  ¦ ¦   ¦ ¦  ¦ ¦¯¯¯¯¯¯¯¯¯¯¯¯¦ ¦     ¦ ¦     '¯¯¯¯¯¦·¦
-¦   ¦·¦   ¦ ¦¯¯¯¯¯¦--------------' '--' '---' '--' '------------' '-----' ¦     ¦-----' ¦
-¦   ¦ '---' ¦     ¦               ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·¦     ¦·  ·  ·¦
-¦   ¦·  ·  ·¦     ¦ ¦¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯'     ¦ ¦¯¯¯¯¯¦
-¦   '¯¯¯¯¯¦ ¦     ¦ ¦                                                           ¦·¦     ¦
-¦         ¦ '-----' '-----------------------------------------------------------' ¦     ¦
-¦         ¦ ·  ·  ·  ·  ·  ·  ·  ·  ◯  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·¦     ¦
-¦¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¦";
-        static string readMap;
         static bool isThereAWall(int currentX, int currentY)
         {
             bool TouchingWall = false;
@@ -294,7 +292,7 @@ namespace PacMan
 
         }
         static int previousdirection = 0;
-        static void Ghosts(int Counter, int pacmanx, int pacmany)
+        static void Ghosts()
         {
             int previousX = ghostx;
             int previousY = ghosty;
@@ -329,16 +327,10 @@ namespace PacMan
             }
             else
             {
-                if (PowerPelletactive&&((Math.Abs(pacmanx - ghostx) <= 1 && pacmany == ghosty) || (pacmanx == ghostx && Math.Abs(pacmanx - ghosty) <= 1)))
+                PacManTouchesGhost();
+                if(isPacManNearGhost()!=0)
                 {
-                    ghostx = 45;
-                    ghosty = 2;
-                    points += 15;
-                    PowerPelletactive = false;
-                }
-                if(isPacManNearGhost(pacmanx, pacmany)!=0)
-                {
-                    previousdirection = isPacManNearGhost(pacmanx,pacmany);
+                    previousdirection = isPacManNearGhost();
                 }
                 int randomint = random.Next(1, 3);
                 switch (previousdirection)
@@ -418,116 +410,6 @@ namespace PacMan
             }
             readMap = newMap;
         }
-        static string GameTitel = @"
-██████╗  █████╗  ██████╗    ███╗   ███╗ █████╗ ███╗   ██╗
-██╔══██╗██╔══██╗██╔════╝    ████╗ ████║██╔══██╗████╗  ██║
-██████╔╝███████║██║         ██╔████╔██║███████║██╔██╗ ██║
-██╔═══╝ ██╔══██║██║         ██║╚██╔╝██║██╔══██║██║╚██╗██║
-██║     ██║  ██║╚██████╗    ██║ ╚═╝ ██║██║  ██║██║ ╚████║
-╚═╝     ╚═╝  ╚═╝ ╚═════╝    ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝";
-        static string TitelscreenImage = @"
-⠀⠀⠀⠀⣀⣤⣴⣶⣶⣶⣦⣤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⣠⣾⣿⣿⣿⣿⣿⣿⢿⣿⣿⣷⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⢀⣾⣿⣿⣿⣿⣿⣿⣿⣅⢀⣽⣿⣿⡿⠃⠀⠀⠀⠀⠀⠀⠀⠀
-⣼⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠛⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⠛⠁⠀⠀⣴⣶⡄⠀⣶⣶⡄⠀⣴⣶⡄
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣦⣀⠀⠙⠋⠁⠀⠉⠋⠁⠀⠙⠋⠀
-⠸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣦⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠙⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠃⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠈⠙⠿⣿⣿⣿⣿⣿⣿⣿⠿⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠉⠉⠉⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀";
-        static string Lost = @"
-██╗   ██╗ ██████╗ ██╗   ██╗    ██╗      ██████╗ ███████╗████████╗        ██╗
-╚██╗ ██╔╝██╔═══██╗██║   ██║    ██║     ██╔═══██╗██╔════╝╚══██╔══╝    ██╗██╔╝
- ╚████╔╝ ██║   ██║██║   ██║    ██║     ██║   ██║███████╗   ██║       ╚═╝██║ 
-  ╚██╔╝  ██║   ██║██║   ██║    ██║     ██║   ██║╚════██║   ██║       ██╗██║ 
-   ██║   ╚██████╔╝╚██████╔╝    ███████╗╚██████╔╝███████║   ██║       ╚═╝╚██╗
-   ╚═╝    ╚═════╝  ╚═════╝     ╚══════╝ ╚═════╝ ╚══════╝   ╚═╝           ╚═╝
-                                                                            
-";
-        static string GhostforLostscreen = @"
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣀⣀⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⢀⣠⣴⣾⠿⠟⠛⠛⠛⠛⠛⠿⢷⣶⣤⡀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⢀⣴⡿⠛⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠙⠿⣷⣄⠀⠀⠀⠀
-⠀⠀⠀⣴⡿⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢻⣷⡀⠀⠀
-⠀⢀⣾⡟⠁⠀⠀⠀⢀⣴⡿⠿⢷⣦⡀⠀⠀⠀⣠⣾⠿⠿⣷⣄⠹⣿⡄⠀
-⠀⣼⡟⠀⠀⠀⠀⠀⣿⡏⠀⠀⠀⢻⣷⠀⠀⢰⣿⠁⠀⠀⠈⣿⡇⠸⣿⡀
-⢰⣿⠁⠀⠀⠀⠀⠀⣿⡇⠀⢀⣤⣼⣿⠀⠀⢸⣿⠀⠀⢀⣤⣿⡇⠀⢻⣇
-⢸⣿⠀⠀⠀⠀⠀⠀⣿⡇⠀⠸⣿⣿⡿⠀⠀⠸⣿⡀⠀⢿⣿⣿⡇⠀⢸⣿
-⢸⡇⠀⠀⠀⠀⠀⠀⠘⠿⣷⣶⣾⠿⠁⠀⠀⠀⠹⢿⣶⣶⡿⠟⠀⠀⢸⣿
-⢸⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿
-⢸⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿
-⢸⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿
-⢸⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿
-⢸⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿
-⢸⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿
-⢸⣿⡀⠀⠀⠀⢀⣤⣶⣶⣦⣄⠀⠀⠀⠀⢀⣤⣶⣶⣦⡀⠀⠀⠀⠀⣸⣿
-⠀⠻⣷⣤⣀⣴⣿⠏⠁⠀⠉⢻⣷⣄⣀⣴⡿⠋⠀⠀⠙⢿⣦⣀⣠⣴⡿⠁
-⠀⠀⠀⠙⠛⠋⠁⠀⠀⠀⠀⠀⠈⠛⠛⠋⠀⠀⠀⠀⠀⠀⠉⠛⠛⠉⠀⠀";
-        static string Won = @"
-██╗   ██╗ ██████╗ ██╗   ██╗    ██╗    ██╗ ██████╗ ███╗   ██╗       ██╗ 
-╚██╗ ██╔╝██╔═══██╗██║   ██║    ██║    ██║██╔═══██╗████╗  ██║    ██╗╚██╗
- ╚████╔╝ ██║   ██║██║   ██║    ██║ █╗ ██║██║   ██║██╔██╗ ██║    ╚═╝ ██║
-  ╚██╔╝  ██║   ██║██║   ██║    ██║███╗██║██║   ██║██║╚██╗██║    ██╗ ██║
-   ██║   ╚██████╔╝╚██████╔╝    ╚███╔███╔╝╚██████╔╝██║ ╚████║    ╚═╝██╔╝
-   ╚═╝    ╚═════╝  ╚═════╝      ╚══╝╚══╝  ╚═════╝ ╚═╝  ╚═══╝       ╚═╝ 
-                                                                       
-";
-        static string PacManforWinscreen = @"
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣤⣤⣤⣤⣤⣤⣤⣤⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⢀⣤⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣤⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⣠⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⢠⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⠛⠻⣿⣿⣿⣿⣿⣿⣿⣷⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⣰⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⡿⠂⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⣸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣦⣤⣴⣿⣿⣿⣿⣿⡿⠛⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⢰⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠛⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠋⠁⠀⠀⠀⢀⣀⠀⠀⠀⠀⠀⠀⠀⣀⠀⠀⠀⠀⠀⠀⢀⣀⠀⠀
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⠋⠁⠀⠀⠀⠀⠀⣴⣿⣿⣿⣦⠀⠀⠀⣼⣿⣿⣿⡆⠀⠀⠀⣴⣿⣿⣿⣆
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣦⣀⠀⠀⠀⠀⠀⠀⢿⣿⣿⣿⡟⠀⠀⠀⢿⣿⣿⣿⠏⠀⠀⠀⢿⣿⣿⣿⠏
-⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣦⣄⠀⠀⠀⠀⠉⠉⠁⠀⠀⠀⠀⠀⠈⠉⠁⠀⠀⠀⠀⠀⠉⠉⠁⠀
-⠸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣦⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⢻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠙⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠛⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠉⠻⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠛⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠙⠛⠛⠻⠿⠿⠟⠛⠛⠋⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀";
-        static string restarting = @"
-                _             _   _             
-  _ __ ___  ___| |_ __ _ _ __| |_(_)_ __   __ _ 
- | '__/ _ \/ __| __/ _` | '__| __| | '_ \ / _` |
- | | |  __/\__ \ || (_| | |  | |_| | | | | (_| |
- |_|  \___||___/\__\__,_|_|   \__|_|_| |_|\__, |
-                                          |___/ ";
-        static string[] Loading = { @"
-        
-        
-  _____ 
- |_____|
-        
-        
-", @"
-              
-              
-  _____ _____ 
- |_____|_____|
-              
-              
-", @"
-                    
-                    
-  _____ _____ _____ 
- |_____|_____|_____|
-                    
-                    
-", @"
-                          
-                          
-  _____ _____ _____ _____ 
- |_____|_____|_____|_____|
-                          
-                          
-" };
         static void Restart()
         {
             Console.Write("Press [Y] to Restart or [N] to end the Game");
@@ -557,18 +439,16 @@ namespace PacMan
                 }
             }
         }
-        static int isPacManNearGhost(int pacmanX, int pacmanY)
+        static int isPacManNearGhost()
         {
-            int ghostX = ghostx;
-            int ghostY = ghosty;
             int wallcounter;
             int direction = 0;
-            if (pacmanX == ghostX)
+            if (pacmanX == ghostx)
             {
-                if (pacmanY > ghostY)
+                if (pacmanY > ghosty)
                 {
                     wallcounter = 0;
-                    for (int i = pacmanY; i > ghostY; i--)
+                    for (int i = pacmanY; i > ghosty; i--)
                     {
                         if (isThereAWall(pacmanX, i))
                         {
@@ -577,32 +457,32 @@ namespace PacMan
                     }
                     if (wallcounter == 0)
                     {
-                        direction = 4;
+                        direction = 2;
                     }
                 }
-                if (pacmanY < ghostY)
+                if (pacmanY < ghosty)
                 {
                     wallcounter = 0;
-                    for (int i = ghostY; i > pacmanY; i--)
+                    for (int i = ghosty; i > pacmanY; i--)
                     {
-                        if (isThereAWall(ghostX, i))
+                        if (isThereAWall(ghostx, i))
                         {
                             wallcounter++;
                         }
                     }
                     if (wallcounter == 0)
                     {
-                        direction = 2;
+                        direction = 4;
                     }
 
                 }
             }
-            if (pacmanY == ghostY)
+            if (pacmanY == ghosty)
             {
-                if (pacmanX > ghostX)
+                if (pacmanX > ghostx)
                 {
                     wallcounter = 0;
-                    for (int i = pacmanX; i > ghostX; i--)
+                    for (int i = pacmanX; i > ghostx; i--)
                     {
                         if (isThereAWall(i, pacmanY))
                         {
@@ -614,12 +494,12 @@ namespace PacMan
                         direction = 1;
                     }
                 }
-                if (pacmanX < ghostX)
+                if (pacmanX < ghostx)
                 {
                     wallcounter = 0;
-                    for (int i = ghostX; i > pacmanX; i--)
+                    for (int i = ghostx; i > pacmanX; i--)
                     {
-                        if (isThereAWall(i, ghostY))
+                        if (isThereAWall(i, ghosty))
                         {
                             wallcounter++;
                         }
@@ -633,6 +513,65 @@ namespace PacMan
             }
 
             return direction;        
+        }
+        static void PacManTouchesGhost()
+        {
+            if (((Math.Abs(pacmanX - ghostx) <= 1 && pacmanY == ghosty) || (pacmanX == ghostx && Math.Abs(pacmanY - ghosty) <= 1))&&!PowerPelletactive)
+            {
+                PacManDeath();
+            }
+            else if (((Math.Abs(pacmanX - ghostx) <= 1 && pacmanY == ghosty) || (pacmanX == ghostx && Math.Abs(pacmanY - ghosty) <= 1)) && PowerPelletactive)
+            {
+                GhostDeath();
+            }
+        }
+        static void PacManDeath()
+        {
+            lives -= 1;
+            for (int i = 0;Deathsounds.Length > i; i++)
+            {
+                Death[i] = new SoundPlayer(Deathsounds[i]);
+            }
+            Death[Deathsoundindex].Play();
+            Deathsoundindex++;
+            Console.SetCursorPosition(ghostx, ghosty);
+            Console.Write(' ');
+            Console.SetCursorPosition(pacmanX, pacmanY);
+            Console.Write("⊔");
+            Thread.Sleep(100);
+            Console.SetCursorPosition(pacmanX, pacmanY);
+            Console.Write('_');
+            Thread.Sleep(100);
+            Console.SetCursorPosition(pacmanX, pacmanY);
+            Console.Write(' ');
+            Thread.Sleep(800);
+            Death[Deathsoundindex].Play();
+            Thread.Sleep(200);
+            Death[Deathsoundindex].Play();
+            Deathsoundindex = 0;
+            Thread.Sleep(200);
+            pacmanX = 45;
+            pacmanY = 17;
+            ghostx = 45;
+            ghosty = 1;
+            Siren[Sirenstage].PlayLooping();
+            Console.SetCursorPosition(0, 27);
+            Console.Write(new string(' ', Console.WindowWidth));
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.SetCursorPosition(0, 27);
+            for (int i = 0; i < lives; i++)
+            {
+                Console.Write(PacManSubstitutesDisplay);
+            }
+        }
+        static void GhostDeath()
+        {
+            ghostx = 45;
+            ghosty = 2;
+            points += 15;
+            PowerPelletactive = false;
+            Siren[Sirenstage].PlayLooping();
+
         }
     }
 }
