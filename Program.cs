@@ -62,6 +62,10 @@ namespace PacMan
         static int sirenincrease;
         static string Map = File.ReadAllText("Map.txt");
         static string readMap;
+        static int wallcounter;
+        static int direction = 0;
+        static int previousdirection;
+        static bool otherDirection = false;
         static void Main(string[] args)
         {
             for (int i = 0; Sirensounds.Length > i; i++)
@@ -291,7 +295,6 @@ namespace PacMan
             return TouchingWall;
 
         }
-        static int previousdirection = 0;
         static void Ghosts()
         {
             int previousX = ghostx;
@@ -302,13 +305,13 @@ namespace PacMan
 
             if (Counter == 1)
             {
-                ghostx = 46;
+                ghostx = 45;
                 ghosty = 2;
             }
             bool xposwall = isThereAWall(ghostx + 1, ghosty);
             bool yposwall = isThereAWall(ghostx, ghosty + 1);
 
-            bool xnegwall = isThereAWall(ghostx, ghosty);
+            bool xnegwall = isThereAWall(ghostx - 1, ghosty);
             bool ynegwall;
             try
             {
@@ -318,72 +321,66 @@ namespace PacMan
             bool moved = false;
             if (Counter == 1)
             {
-                int randomDirection = random.Next(2);
+                int randomDirection = random.Next(1, 2);
                 if (randomDirection == 0)
                 {
                     randomDirection = -1;
                 }
-                ghostx += randomDirection;
+                ghosty += randomDirection;
             }
             else
             {
                 PacManTouchesGhost();
-                if(isPacManNearGhost()!=0)
-                {
-                    previousdirection = isPacManNearGhost();
-                }
                 int randomint = random.Next(1, 3);
-                switch (previousdirection)
+                if (randomint == 1)
                 {
-                    case 1: if (!xposwall && !moved) { if (!isThereAWall(previousX, previousY - 1) && randomint == 1) { ghosty -= 1; } else if (!isThereAWall(previousX, previousY + 1) && randomint == 2) { ghosty += 1; } else if (!isThereAWall(previousX + 1, previousY)) { ghostx += 1; moved = true; } } break;
-                    case 2: if (!yposwall && !moved) { if (!isThereAWall(previousX - 1, previousY) && randomint == 1) ghostx -= 1; else if (!isThereAWall(previousX + 1, previousY) && randomint == 2) ghostx += 1; else if (!isThereAWall(previousX, previousY + 1)) ghosty += 1; moved = true; } break;
-                    case 3: if (!xnegwall && !moved) { if (!isThereAWall(previousX, previousY - 1) && randomint == 1) ghosty -= 1; else if (!isThereAWall(previousX, previousY + 1) && randomint == 2) ghosty += 1; else if (!isThereAWall(previousX - 1, previousY)) ghostx -= 1; moved = true; } break;
-                    case 4: if (!ynegwall && !moved) { if (!isThereAWall(previousX - 1, previousY) && randomint == 1) ghostx -= 1; else if (!isThereAWall(previousX + 1, previousY) && randomint == 2) ghostx += 1; else if (!isThereAWall(previousX, previousY - 1)) ghosty -= 1; moved = true; } break;
-                }
-                if (!moved)
-                {
-                    int randomDirection = random.Next(1, 5);
-
-                    switch (randomDirection)
+                    isPacManNearGhost();
+                    direction = previousdirection;
+                    switch (direction)
                     {
-                        case 1:
-                            if (!xposwall && !isThereAWall(ghostx + 1, ghosty))
-                            {
-                                ghostx = ghostx + 1;
-                            }
-                            break;
+                        case 1: if (!xposwall) { ghostx += 1; moved = true; } break;
+                        case 2: if (!yposwall) { ghosty += 1; moved = true; } break;
+                        case 3: if (!xnegwall) { ghostx -= 1; moved = true; } break;
+                        case 4: if (!ynegwall) { ghosty -= 1; moved = true; } break;
+                    }
+                    if (!moved)
+                    {
+                        randomint = random.Next(1, 3);
+                        direction = ((direction - 1 + randomint) % 4) + 1;
 
-                        case 2:
-                            if (!yposwall && !isThereAWall(ghostx, ghosty + 1))
-                                ghosty += 1;
-                            else { ghosty = previousY; }
-                            break;
-
-                        case 3:
-                            if (!xnegwall && !isThereAWall(ghostx - 1, ghosty))
-                                ghostx -= 1;
-                            else { ghostx = previousX; }
-                            break;
-
-                        case 4:
-                            if (!ynegwall && !isThereAWall(ghostx, ghosty - 1))
-                                ghosty -= 1;
-                            else { ghosty = previousY; }
-                            break;
                     }
                 }
+                else
+                {
+                    randomint = random.Next(1, 3);
+                    direction = ((direction - 1 + randomint) % 4) + 1;
+                    isPacManNearGhost();
+                    switch (direction)
+                    {
+                        case 1: if (!xposwall) { ghostx += 1; moved = true; } break;
+                        case 2: if (!yposwall) { ghosty += 1; moved = true; } break;
+                        case 3: if (!xnegwall) { ghostx -= 1; moved = true; } break;
+                        case 4: if (!ynegwall) { ghosty -= 1; moved = true; } break;
+                    }
+                    if (!moved)
+                    {
+                        direction = previousdirection;
+                    }
+
+                }
+
             }
 
-            Console.SetCursorPosition(previousX, previousY);
-            Console.ForegroundColor = ConsoleColor.Blue;
-            Console.Write(previousSymbol(previousX, previousY));
-            Console.SetCursorPosition(ghostx, ghosty);
-            Console.ForegroundColor = GhostColor;
-            Console.Write(Ghost);
-            if (ghostx > previousX) previousdirection = 1;
-            if (ghosty > previousY) previousdirection = 2;
-            if (ghostx < previousX) previousdirection = 3;
-            if (ghosty < previousY) previousdirection = 4;
+                Console.SetCursorPosition(previousX, previousY);
+                Console.ForegroundColor = ConsoleColor.Blue;
+                Console.Write(previousSymbol(previousX, previousY));
+                Console.SetCursorPosition(ghostx, ghosty);
+                Console.ForegroundColor = GhostColor;
+                Console.Write(Ghost);
+                if (ghostx > previousX) previousdirection = 1;
+                if (ghosty > previousY) previousdirection = 2;
+                if (ghostx < previousX) previousdirection = 3;
+                if (ghosty < previousY) previousdirection = 4;
         }
         static char previousSymbol(int x, int y)
         {
@@ -439,80 +436,10 @@ namespace PacMan
                 }
             }
         }
-        static int isPacManNearGhost()
+        static void isPacManNearGhost()
         {
-            int wallcounter;
-            int direction = 0;
-            if (pacmanX == ghostx)
-            {
-                if (pacmanY > ghosty)
-                {
-                    wallcounter = 0;
-                    for (int i = pacmanY; i > ghosty; i--)
-                    {
-                        if (isThereAWall(pacmanX, i))
-                        {
-                            wallcounter++;
-                        }
-                    }
-                    if (wallcounter == 0)
-                    {
-                        direction = 2;
-                    }
-                }
-                if (pacmanY < ghosty)
-                {
-                    wallcounter = 0;
-                    for (int i = ghosty; i > pacmanY; i--)
-                    {
-                        if (isThereAWall(ghostx, i))
-                        {
-                            wallcounter++;
-                        }
-                    }
-                    if (wallcounter == 0)
-                    {
-                        direction = 4;
-                    }
-
-                }
-            }
-            if (pacmanY == ghosty)
-            {
-                if (pacmanX > ghostx)
-                {
-                    wallcounter = 0;
-                    for (int i = pacmanX; i > ghostx; i--)
-                    {
-                        if (isThereAWall(i, pacmanY))
-                        {
-                            wallcounter++;
-                        }
-                    }
-                    if (wallcounter == 0)
-                    {
-                        direction = 1;
-                    }
-                }
-                if (pacmanX < ghostx)
-                {
-                    wallcounter = 0;
-                    for (int i = ghostx; i > pacmanX; i--)
-                    {
-                        if (isThereAWall(i, ghosty))
-                        {
-                            wallcounter++;
-                        }
-                    }
-                    if (wallcounter == 0)
-                    {
-                        direction = 3;
-                    }
-
-                }
-            }
-
-            return direction;        
+            CheckSameCoordinate(pacmanX, ghostx, pacmanY, ghosty,2,4);
+            CheckSameCoordinate(pacmanY, ghosty, pacmanX, ghostx, 1,3);
         }
         static void PacManTouchesGhost()
         {
@@ -534,17 +461,7 @@ namespace PacMan
             }
             Death[Deathsoundindex].Play();
             Deathsoundindex++;
-            Console.SetCursorPosition(ghostx, ghosty);
-            Console.Write(' ');
-            Console.SetCursorPosition(pacmanX, pacmanY);
-            Console.Write("⊔");
-            Thread.Sleep(100);
-            Console.SetCursorPosition(pacmanX, pacmanY);
-            Console.Write('_');
-            Thread.Sleep(100);
-            Console.SetCursorPosition(pacmanX, pacmanY);
-            Console.Write(' ');
-            Thread.Sleep(800);
+            DeathAnimation();
             Death[Deathsoundindex].Play();
             Thread.Sleep(200);
             Death[Deathsoundindex].Play();
@@ -572,6 +489,67 @@ namespace PacMan
             PowerPelletactive = false;
             Siren[Sirenstage].PlayLooping();
 
+        }
+        static void DeathAnimation()
+        {
+            Console.SetCursorPosition(ghostx, ghosty);
+            Console.Write(' ');
+            Console.SetCursorPosition(pacmanX, pacmanY);
+            Console.Write("⊔");
+            Thread.Sleep(100);
+            Console.SetCursorPosition(pacmanX, pacmanY);
+            Console.Write('_');
+            Thread.Sleep(100);
+            Console.SetCursorPosition(pacmanX, pacmanY);
+            Console.Write(' ');
+            Thread.Sleep(800);
+        }
+        static void CheckSameCoordinate(int pacmancoordinate1, int ghostcoordinate1, int pacmancoordinate2, int ghostcoordinate2, int direction1, int direction2)
+        {
+            wallcounter = 0;
+            if (pacmancoordinate1==ghostcoordinate1|| pacmancoordinate1==ghostcoordinate1+1 || pacmancoordinate1==ghostcoordinate1-1)
+            {
+                if (pacmancoordinate2>ghostcoordinate2)
+                {
+                    for (int i = ghostcoordinate2; i < pacmancoordinate2; i++)
+                    {
+                        WallBetween(pacmancoordinate1, i);
+                    }
+                    if (wallcounter == 0)
+                    {
+                        direction = direction1;
+                    }
+                }
+                if (pacmancoordinate2<ghostcoordinate2)
+                {
+                    for (int i = ghostcoordinate2; i > pacmancoordinate2; i--)
+                    {
+                      WallBetween(pacmancoordinate1, i);
+                    }
+                    if (wallcounter == 0)
+                    {
+                        direction=direction2;
+                    }
+
+                }
+            }
+        }
+        static void WallBetween(int coordinate1, int coordinate2)
+        {
+            try
+            {
+                if (isThereAWall(coordinate1,coordinate2))
+                {
+                    wallcounter++;
+                }
+            }
+            catch
+            {
+                if (isThereAWall(coordinate2, coordinate1))
+                {
+                    wallcounter++;
+                }
+            }
         }
     }
 }
