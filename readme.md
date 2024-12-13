@@ -69,7 +69,16 @@ Zuerst habe ich mich heute mit dem Einbauen weiterer Sounds in das Spiel beschä
 
 ## 13.12.2024
 
-- [ ] Weiteres Umstrukturieren des Codes
+- [X] Weiteres Umstrukturieren des Codes
 - [ ] Einfügen weiterer Geister um die Schwierigkeit zu erhöhen
 - [ ] Eventueller umstieg auf WinForms und anschliessend die verschiedenen Sounds mit dem darin enthaltenen `DirectX`abspielen
 - [ ] Advent of Code-Rätsel bearbeiten
+
+Heute habe ich mich vor allem mit dem weiteren Umstrukturieren des Codes beschäftigt. Ich habe die Funktionen "DeathAnimation", "CheckSameCoordinates" und "WallBetween" erstellt und konnte so die bereits existierenden Funktionen "PacManDeath" und "IsPacManNearGhost" kürzen. Ausserdem habe ich weitere lokale Variabeln als statische Variabeln ausserhalb von Funktionen platziert um einfacher von überall im Code darauf zugreiffen zu können. Anschliessend wollte ich den Verfolgungsmechanismus und auch sonst das Movement des Geistes verbessern, da der Geist sich noch etwas abgehackt bewegte und auch manchmal stecken blieb. Ich programmierte dazu nacheinander mehrere Code-Varianten und probierte sie anschliessend aus. Leider ist es mir das erstellen eines flüssigen Pathfinding jedoch leider noch nicht gelungen. Da wir nächste Woche nur noch Zeit für 2 Arbeitspackete haben, ich jedoch trotzdem gerne vier bearbeiten möchte. Werde ich im Verlauf der nächsten Woche auch in meiner Freizeit etwas an dem Spiel weiterarbeiten.
+
+## 20.11.2024
+
+- [ ] Verbesserung des Pathfindings abschliessen
+- [ ] Schwierigkeit erhöhen (mehr Geister etc.)
+- [ ] Umstrukturieren des Codes abschliessen
+- [ ] noch fehlende Sounds ins Spiel einfügen
