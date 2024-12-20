@@ -50,6 +50,8 @@ namespace PacMan
         static SoundPlayer Fright = new SoundPlayer("fright_firstloop.wav");
         static string[] Deathsounds = { "death_0.wav", "death_1.wav" };
         static SoundPlayer[] Death = new SoundPlayer[Deathsounds.Length];
+        static SoundPlayer winsound = new SoundPlayer("pacman_AwvgsBv.wav");
+        static SoundPlayer lostsound = new SoundPlayer("pacman-die.wav");
         static int Deathsoundindex = 0;
         static string GameTitel = File.ReadAllText("GameTitel.txt");
         static string TitelscreenImage = File.ReadAllText("TitelscreenImage.txt");
@@ -219,64 +221,11 @@ namespace PacMan
                         points++;
                         changeMapSymbols(pacmanX, pacmanY);
                     }
-                    if (Symbol == PowerPellet)
-                    {
-                        changeMapSymbols(pacmanX, pacmanY);
-                        PowerPelletactive=true;
-                        PelletDuration = 20;
-                        Fright.PlayLooping();
-                    }
-                    if (PowerPelletactive)
-                    {
-                        GhostColor = ConsoleColor.Blue;
-                        PelletDuration--;
-                        if(PelletDuration==0)
-                        {
-                            PowerPelletactive = false;
-                            Siren[Sirenstage].PlayLooping();
-                        }
-
-                    }
-                    else
-                    {
-                        GhostColor = ConsoleColor.Red;
-                    }
+                    powerPellet();
                     PacManTouchesGhost();
-                    if (lives == 0)
-                    {
-                        lost = true;
-                        gamestarted = false;
-                    }
-                    if (points == 150)
-                    {
-                        won = true;
-                        gamestarted = false;
-                    }
+                    IsGameFinished();
                 }
-                if (lost)
-                {
-                    Siren[Sirenstage].Stop();
-                    Console.Clear();
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.Write(Lost);
-                    Console.WriteLine();
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.Write(GhostforLostscreen);
-                    Console.WriteLine();
-                    Restart();
-                }
-                if (won)
-                {
-                    Siren[Sirenstage].Stop();
-                    Console.Clear();
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.Write(Won);
-                    Console.WriteLine();
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.Write(PacManforWinscreen);
-                    Console.WriteLine();
-                    Restart();
-                }
+                EndGame();
             }
         }
         static bool isThereAWall(int currentX, int currentY)
@@ -297,8 +246,6 @@ namespace PacMan
         }
         static void Ghosts()
         {
-            int previousX = ghostx;
-            int previousY = ghosty;
             Random random = new Random();
             Console.OutputEncoding = Encoding.UTF8;
             string Ghost = "Δ";
@@ -308,80 +255,52 @@ namespace PacMan
                 ghostx = 45;
                 ghosty = 2;
             }
-            bool xposwall = isThereAWall(ghostx + 1, ghosty);
-            bool yposwall = isThereAWall(ghostx, ghosty + 1);
 
-            bool xnegwall = isThereAWall(ghostx - 1, ghosty);
-            bool ynegwall;
-            try
+            int previousX = ghostx;
+            int previousY = ghosty;
+
+            bool[] walls = {
+        isThereAWall(ghostx + 1, ghosty),
+        isThereAWall(ghostx, ghosty + 1),
+        isThereAWall(ghostx - 1, ghosty),
+        isThereAWall(ghostx, ghosty - 1)
+    };
+
+            List<int> possibleDirections = new List<int>();
+            for (int i = 0; i < walls.Length; i++)
             {
-                ynegwall = isThereAWall(ghostx, ghosty - 1);
+                if (!walls[i]) possibleDirections.Add(i + 1);
             }
-            catch { ynegwall = true; }
-            bool moved = false;
-            if (Counter == 1)
+
+            if (possibleDirections.Count == 0) return;
+            if (possibleDirections.Contains(previousdirection))
             {
-                int randomDirection = random.Next(1, 2);
-                if (randomDirection == 0)
-                {
-                    randomDirection = -1;
-                }
-                ghosty += randomDirection;
+                direction = previousdirection;
             }
             else
             {
-                PacManTouchesGhost();
-                int randomint = random.Next(1, 3);
-                if (randomint == 1)
-                {
-                    isPacManNearGhost();
-                    direction = previousdirection;
-                    switch (direction)
-                    {
-                        case 1: if (!xposwall) { ghostx += 1; moved = true; } break;
-                        case 2: if (!yposwall) { ghosty += 1; moved = true; } break;
-                        case 3: if (!xnegwall) { ghostx -= 1; moved = true; } break;
-                        case 4: if (!ynegwall) { ghosty -= 1; moved = true; } break;
-                    }
-                    if (!moved)
-                    {
-                        randomint = random.Next(1, 3);
-                        direction = ((direction - 1 + randomint) % 4) + 1;
-
-                    }
-                }
-                else
-                {
-                    randomint = random.Next(1, 3);
-                    direction = ((direction - 1 + randomint) % 4) + 1;
-                    isPacManNearGhost();
-                    switch (direction)
-                    {
-                        case 1: if (!xposwall) { ghostx += 1; moved = true; } break;
-                        case 2: if (!yposwall) { ghosty += 1; moved = true; } break;
-                        case 3: if (!xnegwall) { ghostx -= 1; moved = true; } break;
-                        case 4: if (!ynegwall) { ghosty -= 1; moved = true; } break;
-                    }
-                    if (!moved)
-                    {
-                        direction = previousdirection;
-                    }
-
-                }
-
+                direction = possibleDirections[random.Next(possibleDirections.Count)];
             }
+            isPacManNearGhost();
+            GhostColor = PowerPelletactive ? ConsoleColor.Blue : ConsoleColor.Red;
+            switch (direction)
+            {
+                case 1: ghostx += 1; break;
+                case 2: ghosty += 1; break;
+                case 3: ghostx -= 1; break;
+                case 4: ghosty -= 1; break;
+            }
+            Console.SetCursorPosition(previousX, previousY);
+            Console.ForegroundColor = ConsoleColor.Blue;
+            Console.Write(previousSymbol(previousX, previousY));
 
-                Console.SetCursorPosition(previousX, previousY);
-                Console.ForegroundColor = ConsoleColor.Blue;
-                Console.Write(previousSymbol(previousX, previousY));
-                Console.SetCursorPosition(ghostx, ghosty);
-                Console.ForegroundColor = GhostColor;
-                Console.Write(Ghost);
-                if (ghostx > previousX) previousdirection = 1;
-                if (ghosty > previousY) previousdirection = 2;
-                if (ghostx < previousX) previousdirection = 3;
-                if (ghosty < previousY) previousdirection = 4;
+            Console.SetCursorPosition(ghostx, ghosty);
+            Console.ForegroundColor = GhostColor;
+            Console.Write(Ghost);
+            previousdirection = direction;
         }
+
+
         static char previousSymbol(int x, int y)
         {
             string[] splitedmap = readMap.Split('\n');
@@ -406,6 +325,73 @@ namespace PacMan
                 newMap += splitedmap[i] + "\n";
             }
             readMap = newMap;
+        }
+        static void IsGameFinished()
+        {
+            if (lives == 0)
+            {
+                lost = true;
+                gamestarted = false;
+            }
+            if (points == 150)
+            {
+                won = true;
+                gamestarted = false;
+            }
+        }
+        static void powerPellet()
+        {
+            if (Symbol == PowerPellet)
+            {
+                changeMapSymbols(pacmanX, pacmanY);
+                PowerPelletactive = true;
+                PelletDuration = 20;
+                Fright.PlayLooping();
+            }
+            if (PowerPelletactive)
+            {
+                GhostColor = ConsoleColor.Blue;
+                PelletDuration--;
+                if (PelletDuration == 0)
+                {
+                    PowerPelletactive = false;
+                    Siren[Sirenstage].PlayLooping();
+                }
+
+            }
+            else
+            {
+                GhostColor = ConsoleColor.Red;
+            }
+        }
+        static void EndGame()
+        {
+             if (lost)
+                {
+                    Siren[Sirenstage].Stop();
+                    Console.Clear();
+                    lostsound.Play();
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.Write(Lost);
+                    Console.WriteLine();
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.Write(GhostforLostscreen);
+                    Console.WriteLine();
+                    Restart();
+                }
+                if (won)
+                {
+                    Siren[Sirenstage].Stop();
+                    Console.Clear();
+                    winsound.Play();
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.Write(Won);
+                    Console.WriteLine();
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.Write(PacManforWinscreen);
+                    Console.WriteLine();
+                    Restart();
+                }
         }
         static void Restart()
         {
@@ -507,7 +493,7 @@ namespace PacMan
         static void CheckSameCoordinate(int pacmancoordinate1, int ghostcoordinate1, int pacmancoordinate2, int ghostcoordinate2, int direction1, int direction2)
         {
             wallcounter = 0;
-            if (pacmancoordinate1==ghostcoordinate1|| pacmancoordinate1==ghostcoordinate1+1 || pacmancoordinate1==ghostcoordinate1-1)
+            if (pacmancoordinate1==ghostcoordinate1)
             {
                 if (pacmancoordinate2>ghostcoordinate2)
                 {
