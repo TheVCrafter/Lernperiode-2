@@ -78,7 +78,13 @@ Heute habe ich mich vor allem mit dem weiteren Umstrukturieren des Codes beschä
 
 ## 20.11.2024
 
-- [ ] Verbesserung des Pathfindings abschliessen
+- [X] Verbesserung des Pathfindings abschliessen
 - [ ] Schwierigkeit erhöhen (mehr Geister etc.)
-- [ ] Umstrukturieren des Codes abschliessen
-- [ ] noch fehlende Sounds ins Spiel einfügen
+- [X] Umstrukturieren des Codes abschliessen
+- [X] noch fehlende Sounds ins Spiel einfügen
+
+Zuerst habe ich heute die noch fehlenden Sounds ins Spiel eingefügt. Das war ein Sound welcher bei einem Sieg und ein anderer Sound welcher bei einer Niederlage abgespielt wird. Anschliessend habe ich versucht die Main-Funktion etwas weiter zu kürzen. Dazu habe ich die Funktionen "EndGame", "powerPellet" und "IsGameFinished" eingefügt. Dann habe ich mich noch ans verbessern des Pathfindings gemacht. Dazu musste ich ChatGPT etwas zur hilfe nehmen, weil ich selbst keine Ahnung hatte, wodurch das Problem verursacht wurde. Nachdem ich das Movement verbessert hatte und der Geist sich nun endlich flüssig bewegte. Fand ich beim Testen einen kleinen Bug bei der Verfolgungsmechanik. Diesen konnte ich jedoch beheben, indem ich bei der Y-Prüfung die beiden Code-Teile mit -1 und +1 entfehrnte. Leider kam ich zeitlich nicht mehr dazu weitere Geister ins Spiel einzufügen.
+
+## Fertiges Projekt
+Bei meinem fertigen Projekt handelt es sich um ein kleines PacMan-Spiel. Das Ziel des Spiels ist es nicht von dem Geist gefressen zu werden und eine Punktzahl von 150 Punkten zu erreichen um das Spiel zu gewinnen. Falls der PacMan doch gefressen wird, wird Ihm eines der 3 Leben abgezogen. Der Spieler verliert das Spiel also dann, wenn er 3 Mal vom Geist gefressen wird. Nach beenden des Spiels ist es möglich, das das Spiel entweder neu zu starten oder zu beenden. Während einem Spiel kann das Programm nur durch manuelles schliessen beendet werden. Es ist jedoch auch möglich das Spiel mit drücken der ESC-Taste zu beenden.
+Es gibt im Spiel nur ein Level.
