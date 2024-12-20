@@ -89,3 +89,6 @@ Zuerst habe ich heute die noch fehlenden Sounds ins Spiel eingefügt. Das war ei
 Bei meinem fertigen Projekt handelt es sich um ein kleines PacMan-Spiel. Das Ziel des Spiels ist es nicht von dem Geist gefressen zu werden und eine Punktzahl von 150 Punkten zu erreichen um das Spiel zu gewinnen. Falls der PacMan doch gefressen wird, wird Ihm eines der 3 Leben abgezogen. Der Spieler verliert das Spiel also dann, wenn er 3 Mal vom Geist gefressen wird. Nach beenden des Spiels ist es möglich, das das Spiel entweder neu zu starten oder zu beenden. Während einem Spiel kann das Programm nur durch manuelles schliessen beendet werden. Es ist jedoch auch möglich das Spiel mit drücken der ESC-Taste zu beenden.
 Es gibt im Spiel nur ein Level.
 ![](PacMan-Gameplay.gif)
+
+## Reflexion
+
